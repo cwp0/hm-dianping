@@ -24,12 +24,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class LoginIntercepter implements HandlerInterceptor {
 
-    private StringRedisTemplate stringRedisTemplate;
-
-    public LoginIntercepter(StringRedisTemplate stringRedisTemplate) {
-        this.stringRedisTemplate = stringRedisTemplate;
-    }
-
     /**
      * @Description: 在请求处理之前进行调用（Controller方法调用之前）
      * @Param: request      {javax.servlet.http.HttpServletRequest}
@@ -41,49 +35,14 @@ public class LoginIntercepter implements HandlerInterceptor {
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 1. 获取session
-        // HttpSession session = request.getSession();
-        // 1. 获取请求头中的token
-        String token = request.getHeader("authorization");
-        if (StrUtil.isBlank(token)) {
+        // 1. 判断是否需要去拦截(ThreadLocal中是否有用户信息)
+        if (UserHolder.getUser() == null) {
+            // 没有，，需要拦截，设置状态码
             response.setStatus(401);
             return false;
         }
-        // 2. 获取session中的用户
-        // Object user = session.getAttribute("user");
-        // 2. 基于token获取redis中的用户
-        String tokenKey = RedisConstants.LOGIN_USER_KEY + token;
-        Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(tokenKey);
-        // 3. 判断用户是否存在
-        if (userMap.isEmpty()) {
-            // 4. 不存在，返回401
-            response.setStatus(401);
-            return false;
-        }
-        // 5. 将查询到的Hash数据转为UserDTO对象
-        UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
-        // 6. 存在，保存用户信息到ThreadLocal
-        UserHolder.saveUser(userDTO);
-        // 7. 刷新token有效期
-        stringRedisTemplate.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
-        // 8. 放行
+        // 有用户，放行
         return true;
-    }
-
-    /**
-     * @Description: 请求处理之后进行调用，但是在视图被渲染之前（Controller方法调用之后）
-     * @Param: request      {javax.servlet.http.HttpServletRequest}
-     * @Param: response      {javax.servlet.http.HttpServletResponse}
-     * @Param: handler      {java.lang.Object}
-     * @Param: ex      {java.lang.Exception}
-     * @Return: void
-     * @Author: cwp0
-     * @CreatedTime: 2024/7/24 16:33
-     */
-    @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-        // 清除ThreadLocal中的用户信息
-        UserHolder.removeUser();
     }
 }
 
