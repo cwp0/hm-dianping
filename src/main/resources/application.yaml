@@ -1,0 +1,27 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: hmdp
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 123456
+  redis:
+    host: 192.168.3.178
+    port: 6379
+    password: 123456
+    lettuce:
+      pool:
+        max-active: 10  # 连接池中允许的最大连接数。如果达到这个数值，再有新的请求需要连接，则会被阻塞或者拒绝。如果设为负值，则表示没有限制。
+        max-idle: 10  # 连接池中保持的最大空闲连接数。超过这个数值的空闲连接会被销毁。
+        min-idle: 1  # 连接池中保持的最小空闲连接数。当连接池中的空闲连接数低于这个数值时，会创建新的连接，直到达到这个数值。
+        time-between-eviction-runs: 10s  # 两次空闲连接扫描之间要休眠的时间。如果为负值，则不运行空闲连接扫描。
+  jackson:
+    default-property-inclusion: non_null # JSON处理时忽略非空字段
+mybatis-plus:
+  type-aliases-package: com.hmdp.entity # 别名扫描包
+logging:
+  level:
+    com.hmdp: debug
