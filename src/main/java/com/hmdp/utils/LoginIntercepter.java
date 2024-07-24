@@ -41,10 +41,8 @@ public class LoginIntercepter implements HandlerInterceptor {
             return false;
         }
         // 5. 存在，保存用户信息到ThreadLocal
-        UserDTO userDTO = new UserDTO();
-        // 对象属性拷贝
-        BeanUtils.copyProperties(user, userDTO);
-        UserHolder.saveUser(userDTO);
+
+        UserHolder.saveUser((UserDTO) user);
         // 6. 放行
         return true;
     }
