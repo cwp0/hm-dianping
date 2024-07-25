@@ -22,4 +22,14 @@ public interface IShopService extends IService<Shop> {
      * @CreatedTime: 2024/7/25 12:57
      */
     Result queryById(Long id);
+
+    /**
+     * @Description: 更新商铺信息
+     * @Param: shop      {com.hmdp.entity.Shop}
+     * @Return: com.hmdp.dto.Result
+     * @Author: cwp0
+     * @CreatedTime: 2024/7/25 13:55
+     */
+    Result update(Shop shop);
+
 }
