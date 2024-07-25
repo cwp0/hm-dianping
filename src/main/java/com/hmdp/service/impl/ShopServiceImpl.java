@@ -60,8 +60,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
             return Result.fail("商铺不存在");
         }
-        // 6. 数据库中存在，将数据写入redis缓存
-        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(shop), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+        // 6. 数据库中存在，将数据写入redis缓存, 给过期时间添加一个随机值，防止缓存雪崩
+        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(shop), RedisConstants.CACHE_SHOP_TTL + (long) (Math.random() * 10), TimeUnit.MINUTES);
         // 7. 返回数据
         return Result.ok(shop);
     }
