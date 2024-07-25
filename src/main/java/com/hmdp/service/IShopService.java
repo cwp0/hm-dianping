@@ -1,5 +1,6 @@
 package com.hmdp.service;
 
+import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -13,4 +14,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IShopService extends IService<Shop> {
 
+    /**
+     * @Description: 根据id查询商铺信息
+     * @Param: id      {java.lang.Long}
+     * @Return: com.hmdp.dto.Result
+     * @Author: cwp0
+     * @CreatedTime: 2024/7/25 12:57
+     */
+    Result queryById(Long id);
 }
