@@ -22,4 +22,6 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
      * @CreatedTime: 2024/7/26 14:38
      */
     Result seckillVoucher(Long voucherId);
+
+    Result createVoucherOrder(Long voucherId);
 }
