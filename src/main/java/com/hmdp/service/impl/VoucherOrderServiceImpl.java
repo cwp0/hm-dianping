@@ -13,12 +13,15 @@ import com.hmdp.utils.SimpleRedisLock;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 /**
  * <p>
@@ -43,6 +46,13 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private RedissonClient redissonClient;
 
+    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
+    static {
+        SECKILL_SCRIPT = new DefaultRedisScript<>();
+        SECKILL_SCRIPT.setLocation(new ClassPathResource("seckill.lua"));
+        SECKILL_SCRIPT.setResultType(Long.class);
+    }
+
     /**
      * @Description: 秒杀代金券
      * @Param: voucherId      {java.lang.Long}
@@ -50,8 +60,34 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @Author: cwp0
      * @CreatedTime: 2024/7/26 14:38
      */
-    @Override
     public Result seckillVoucher(Long voucherId) {
+        // 获取用户
+        Long userId = UserHolder.getUser().getId();
+        // 1. 执行lua脚本
+        Long result = stringRedisTemplate.execute(SECKILL_SCRIPT, Collections.emptyList(), voucherId.toString(), userId.toString());
+        // 2. 判断是否为0
+        int res = result.intValue();
+        if (res != 0) {
+            // 2.1. 不为0，代表没有购买资格
+            return Result.fail(res == 1 ? "库存不足!" : "不能重复下单!");
+        }
+        // 2.2. 为0，有购买资格，把下单信息保存到阻塞队列
+        long orderId = redisIdWorker.nextId("order");
+
+
+
+        // 3. 返回订单id
+        return Result.ok(orderId);
+    }
+
+    /**
+     * @Description: 秒杀代金券
+     * @Param: voucherId      {java.lang.Long}
+     * @Return: com.hmdp.dto.Result
+     * @Author: cwp0
+     * @CreatedTime: 2024/7/26 14:38
+     */
+    /*public Result seckillVoucher(Long voucherId) {
         // 1. 查询优惠券信息
         SeckillVoucher voucher = seckillVoucherService.getById(voucherId);
         // 2. 判断秒杀是否开始
@@ -67,11 +103,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("库存不足!");
         }
         Long userId = UserHolder.getUser().getId();
-        /*synchronized (userId.toString().intern()) {
+        *//*synchronized (userId.toString().intern()) {
             // 获取事务的代理对象
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucherOrder(voucherId);
-        }*/
+        }*//*
 
         // 使用Redis分布式锁，保证多个JVM之间线程的互斥
         // 创建锁对象
@@ -92,7 +128,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         } finally {
             lock.unlock();
         }
-    }
+    }*/
 
     @Transactional
     public Result createVoucherOrder(Long voucherId) {
