@@ -36,4 +36,6 @@ public interface IUserService extends IService<User> {
      * @CreatedTime: 2024/7/24 15:10
      */
     Result login(LoginFormDTO loginForm, HttpSession session);
+
+    Result sign();
 }
